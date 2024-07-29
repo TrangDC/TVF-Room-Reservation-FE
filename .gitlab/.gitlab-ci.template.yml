@@ -105,7 +105,7 @@ eslint:
     OUTPUT_PATH: '$CI_PROJECT_DIR/build'
   script:
     - npm install -g @azure/static-web-apps-cli
-    - swa deploy ./build -d $API_TOKEN -w ./ --env production
+    - swa deploy ./dist -d $API_TOKEN -w ./ --env production
     - echo "Done"
   tags:
     - $RUNNER_TAG
