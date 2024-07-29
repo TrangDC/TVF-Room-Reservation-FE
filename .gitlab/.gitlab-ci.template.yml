@@ -1,0 +1,112 @@
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+      variables:
+        PPIPELINE_NAME: CI
+    - if: $CI_COMMIT_REF_NAME == 'main'
+      variables:
+        PIPELINE_NAME: CD
+        ENVIRONMENT: development
+        SUBSCRIPTION_ID: 960dc494-982f-4e76-b6c6-c1f3fafa6d40
+        API_TOKEN: $DEV_DEPLOYMENT_TOKEN
+    - if: $CI_COMMIT_TAG
+      variables:
+        PIPELINE_NAME: CD
+        ENVIRONMENT: production
+        SUBSCRIPTION_ID: 960dc494-982f-4e76-b6c6-c1f3fafa6d40
+        API_TOKEN: $PROD_DEPLOYMENT_TOKEN
+    - when: never
+
+default:
+  interruptible: true
+
+variables:
+  RUNNER_TAG: shared_builder
+
+stages:
+  - ci
+  - qualitygate
+  - build
+  - deploy
+
+eslint:
+  image: ${DOCKER_REGISTRY_PROXY}/node:16-alpine
+  stage: ci
+  script:
+    - yarn install
+    - yarn lint
+    - yarn typecheck
+  allow_failure: true
+  cache:
+    key: $CI_COMMIT_REF_SLUG
+    paths:
+      - node_modules/
+  rules:
+    - if: $PIPELINE_NAME == "CI"
+    - when: never
+  tags:
+    - $RUNNER_TAG
+
+# sonarqube:
+#   image:
+#     name: ${DOCKER_REGISTRY_PROXY}/sonarsource/sonar-scanner-cli:5.0
+#     entrypoint: [""]
+#   stage: qualitygate
+#   allow_failure: true
+#   variables:
+#     SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar" #Define the location of the analysis task cache
+#     GIT_DEPTH: "0" #Tells git to fetch all the branches of the project, required by the analysis task
+#   script:
+#     - |
+#       sonar-scanner \
+#       -Dsonar.qualitygate.wait=true \
+#       -Dsonar.projectKey=${CI_PROJECT_PATH_SLUG} \
+#       -Dsonar.projectName=${CI_PROJECT_PATH_SLUG} \
+#       -Dsonar.projectVersion=${CI_COMMIT_SHA:0:7} \
+#       -DsourceEncoding=UTF-8
+#   rules:
+#     - if: $PIPELINE_NAME == "CI" || $PIPELINE_NAME == "CD"
+#     - when: never
+#   cache:
+#     key: "${CI_PROJECT_NAME}-sonarqube"
+#     policy: pull-push
+#     paths:
+#       - "${SONAR_USER_HOME}/cache"
+#   tags:
+#     - "$RUNNER_TAG"
+
+.build:
+  image: ${DOCKER_REGISTRY_PROXY}/node:18-alpine
+  stage: build
+  allow_failure: false
+  variables:
+    NODE_OPTIONS: --max-old-space-size=7092
+  when: manual
+  script:
+    - yarn install
+    - CI=false yarn build
+  cache:
+    key: $CI_COMMIT_REF_SLUG
+    paths:
+      - node_modules/
+  artifacts:
+    when: on_success
+    paths:
+      - build/
+    expire_in: 20 mins
+  tags:
+    - $RUNNER_TAG
+
+.deploy:
+  stage: deploy
+  image: node:lts-buster
+  variables:
+    APP_PATH: '$CI_PROJECT_DIR'
+    OUTPUT_PATH: '$CI_PROJECT_DIR/build'
+  script:
+    - npm install -g @azure/static-web-apps-cli
+    - swa deploy ./build -d $API_TOKEN -w ./ --env production
+    - echo "Done"
+  tags:
+    - $RUNNER_TAG
+

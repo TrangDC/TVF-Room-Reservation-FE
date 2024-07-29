@@ -1,0 +1,47 @@
+// Reponsive
+.fc-day {
+  cursor: pointer;
+  .fc-daygrid-event-harness {
+    .fc-event {
+      .event {
+        overflow: hidden;
+        span {
+          font-weight: 500;
+        }
+        &:hover {
+          filter: brightness(0.8);
+        }
+      }
+    }
+  }
+}
+
+.fc-today-button {
+  .fc-button {
+    .fc-button-primary {
+      outline: none;
+    }
+  }
+}
+.fc-daygrid-day-frame {
+  &.fc-scrollgrid-sync-inner {
+  }
+}
+
+// Calendar header
+@media (max-width: 810px) {
+  .fc-toolbar-title {
+    margin: 10px 0 !important;
+    width: 100%;
+    text-align: center;
+  }
+  .fc {
+    .fc-toolbar {
+      display: initial !important;
+    }
+  }
+  .fc-toolbar-chunk {
+    display: flex;
+    justify-content: space-between;
+  }
+}

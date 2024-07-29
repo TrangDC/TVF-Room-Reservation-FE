@@ -1,0 +1,53 @@
+include: "/.gitlab/.gitlab-ci.template.yml"
+
+.dev:
+  variables:
+    REACT_APP_ENDPOINT_API: https://roomreservation-api.techvify.dev/graphql
+    REACT_APP_ENDPOINT_BE: https://roomreservation-api.techvify.dev
+  rules:
+    - if: $PIPELINE_NAME == "CD" && $ENVIRONMENT == "development"
+    - when: never
+
+.prod:
+  variables:
+    REACT_APP_ENDPOINT_API: https://roomreservation-api.techvify.com/graphql
+    REACT_APP_ENDPOINT_BE: https://roomreservation-api.techvify.com
+  rules:
+    - if: $PIPELINE_NAME == "CD" && $ENVIRONMENT == "production"
+    - when: never
+
+##############################################
+## DEV ENVIRONMENT
+##############################################
+
+build_dev:
+  extends:
+    - .dev
+    - .build
+
+deploy_dev:
+  extends:
+    - .dev
+    - .deploy
+  needs:
+    - job: build_dev
+      artifacts: true
+      optional: false
+
+##############################################
+## PROD ENVIRONMENT
+##############################################
+
+build_prod:
+  extends:
+    - .prod
+    - .build
+
+deploy_prod:
+  extends:
+    - .prod
+    - .deploy
+  needs:
+    - job: build_prod
+      artifacts: true
+      optional: false
