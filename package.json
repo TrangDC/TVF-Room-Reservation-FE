@@ -67,6 +67,7 @@
     "husky": "^8.0.0",
     "lint-staged": "^15.2.5",
     "postcss": "^8.4.38",
+    "publint": "^0.2.9",
     "tailwindcss": "^3.4.4",
     "typescript": "^5.5.2",
     "vite": "^5.2.0"
