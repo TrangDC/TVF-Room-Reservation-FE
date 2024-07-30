@@ -1,27 +1,22 @@
-import { useQuery } from "@apollo/client";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import Tippy from "@tippyjs/react";
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import "tippy.js/dist/tippy.css";
 import "tippy.js/themes/light.css";
 import { IBookingAPI } from "../../api/booking/type";
-import { GET_OFFICES } from "../../api/office/query";
-import { IOfficeApi } from "../../api/office/type";
 import { TOAST_CALENDAR_ID } from "../../constants/toastId";
-import useBookingStore from "../../store/bookingStore";
 import useUserStore from "../../store/store";
 import { IExtendedProps } from "../../types/interfaces/calendar";
 import { IEvent } from "../../types/interfaces/event";
 import { dateToStringTime } from "../../utils/timeFormat";
 import Button from "../common/button/button";
 import Modal from "../common/modal";
-import Select from "../common/select";
 import "./index.scss";
-import { useNavigate } from "react-router";
 
 interface CalendarComponentProps {
   events?: IEvent[];
@@ -32,7 +27,6 @@ interface CalendarComponentProps {
   onEditBooking?: (id: string) => void;
   onDeleteBooking: (id: string) => void;
   bookings: [];
-  handleSelectOfficeSorting: (officeId: string) => void;
   onDatesSet: (startDate: string, endDate: string) => void;
 }
 
@@ -43,7 +37,6 @@ interface ICalendarEvent extends IEvent {
 const CalendarComponent: React.FC<CalendarComponentProps> = ({
   events,
   initialView = "dayGridMonth",
-  //onEditBooking,
   bookings,
   onDeleteBooking,
   onClickDate,
@@ -52,29 +45,15 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
   onDatesSet
 }) => {
   const user = useUserStore((state) => state.user);
-  const [selectOptions, setSelectOptions] = useState<IOfficeApi[]>();
-  const { data: officesData } = useQuery<{ GetOffices: IOfficeApi[] }>(GET_OFFICES);
   const calendarRef = useRef<FullCalendar>(null); // Ref to FullCalendar instance
   const [newBookings, setNewBookings] = useState<IEvent[]>(); // State to hold endDate
-  const { officeId, setOfficeId } = useBookingStore();
   const navigate = useNavigate();
+
   const handleDatesSet = (arg: { startStr: string; endStr: string }) => {
     const getStartDate = arg.startStr.split("T")[0];
     const getEndDate = arg.endStr.split("T")[0];
     onDatesSet(getStartDate, getEndDate);
   };
-
-  useEffect(() => {
-    const newOfficesData: IOfficeApi[] =
-      officesData?.GetOffices.map((office) => ({
-        id: office.id,
-        name: office.name,
-        description: office.description,
-        rooms: office.rooms
-      })) ?? [];
-
-    setSelectOptions(newOfficesData);
-  }, [officesData]);
 
   useEffect(() => {
     handleMappingBookingsData();
@@ -118,10 +97,6 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
       });
       setNewBookings(events);
     }
-  };
-
-  const handleSelectOfficeSorting = (officeId: string) => {
-    setOfficeId(officeId);
   };
 
   const handleDateClick = (info: { dateStr: string }) => {
@@ -186,7 +161,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
         content={
           <div className='cursor-default text-nowrap p-3'>
             <div className='flex flex-col mb-2'>
-              <div className='!font-semibold text-xl'>{title}</div>
+              <div className='!font-semibold text-xl overflow-x-hidden text-ellipsis'>{title}</div>
               <div className='!font-medium my-1'>
                 {name}, {floor}
               </div>
@@ -239,19 +214,6 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
       <Modal isShow={false} />
 
       <div className='sticky top-[92px]'>
-        {selectOptions && selectOptions.length > 0 && (
-          <Select
-            containerClass='flex flex-row items-center mb-[21px] w-full'
-            labelClass='mr-5 text-lg text-black'
-            selectClass='!text-[16px] py-[8px] px-[10px] cursor-pointer w-[130px]'
-            // options={officesData}
-            options={selectOptions}
-            onSelectOption={handleSelectOfficeSorting}
-            label='Office'
-            defaultValue={officeId}
-          />
-        )}
-
         <FullCalendar
           datesSet={handleDatesSet}
           ref={calendarRef}
