@@ -2,9 +2,7 @@ import { useLazyQuery, useMutation } from "@apollo/client";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { DELETE_BOOKING, GET_BOOKING, GET_BOOKINGS } from "../api/booking/query";
-import { USER_ROLE } from "../constants/role";
 import useBookingStore from "../store/bookingStore";
-import useUserStore from "../store/store";
 import { IDateRange } from "../types/interfaces/booking";
 import CalendarComponent from "./calendar/index";
 import Modal from "./common/modal";
@@ -13,7 +11,6 @@ import FormEventComponent from "./formEvent";
 function Content() {
   const [isShowModal, setIsShowModal] = useState(false);
   const [clickedDate, setClickedDate] = useState<string>("");
-  const { role } = useUserStore((state) => state.user);
   const [GetBooking] = useLazyQuery(GET_BOOKING);
   const [CancelBooking] = useMutation(DELETE_BOOKING);
   const [idDelete, setIdDelete] = useState<string>("");
@@ -35,7 +32,7 @@ function Content() {
   };
 
   const handleRefetchBookings = () => {
-    if (!dateRangeData.startDate && !dateRangeData.endDate && !officeId) return;
+    if (!dateRangeData.startDate || !dateRangeData.endDate || !officeId) return;
 
     getBookings({
       variables: {

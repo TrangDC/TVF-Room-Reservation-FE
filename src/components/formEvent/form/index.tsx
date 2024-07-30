@@ -138,7 +138,7 @@ function FormEvent({
 
     if (name === "reservationDay" || name === "endDate") {
       if (name === "reservationDay") {
-        if (formattedCurrentDate < value) {
+        if (formattedCurrentDate <= value) {
           inputValue = value;
         } else {
           inputValue = formattedCurrentDate;
