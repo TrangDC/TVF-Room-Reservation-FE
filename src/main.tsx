@@ -6,19 +6,19 @@ import {
   InMemoryCache
 } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
+import { onError } from "@apollo/client/link/error";
 import { PublicClientApplication } from "@azure/msal-browser";
 import { MsalProvider } from "@azure/msal-react";
+import { jwtDecode } from "jwt-decode";
 import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import { toast } from "react-toastify";
 import { msalConfig } from "./api/auth/request";
 import App from "./App.tsx";
-import "./index.css";
-import { cookieHelper } from "./utils/cookie.ts";
-import { onError } from "@apollo/client/link/error";
-import { toast } from "react-toastify";
 import { TOAST_TOKEN } from "./constants/toastId.ts";
-import { BrowserRouter } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
+import "./index.css";
 import useUserStore from "./store/store.ts";
+import { cookieHelper } from "./utils/cookie.ts";
 import { localStorageHelper } from "./utils/localStorage.ts";
 
 const msalInstance = new PublicClientApplication(msalConfig);
@@ -44,8 +44,10 @@ const getNewToken = async () => {
       return `Bearer ${accessToken}`;
     });
   } else {
-    toast.warn("Session expired please sign in again!", { toastId: TOAST_TOKEN.EXPIRED });
-    window.location.href = "http://localhost:5173/error";
+    toast.warn("Session expired, please wait for new session!", { toastId: TOAST_TOKEN.EXPIRED });
+    cookieHelper.remove(cookieHelper.COOKIE_KEYS.ACCESS_TOKEN);
+    cookieHelper.remove(cookieHelper.COOKIE_KEYS.REFRESH_TOKEN);
+    location.reload();
   }
 };
 
@@ -74,8 +76,10 @@ const authLink = setContext(async (_, { headers }) => {
       };
     }
   } else {
-    toast.warn("Session expired, please sign in again!", { toastId: TOAST_TOKEN.EXPIRED });
-    window.location.href = "http://localhost:5173/error";
+    toast.warn("Session expired, please wait for new session!", { toastId: TOAST_TOKEN.EXPIRED });
+    cookieHelper.remove(cookieHelper.COOKIE_KEYS.ACCESS_TOKEN);
+    cookieHelper.remove(cookieHelper.COOKIE_KEYS.REFRESH_TOKEN);
+    location.reload();
   }
 });
 
@@ -88,12 +92,8 @@ const logoutLink = onError(({ graphQLErrors, networkError, operation }) => {
     useUserStore.persist.clearStorage();
     cookieHelper.remove(cookieHelper.COOKIE_KEYS.ACCESS_TOKEN);
     cookieHelper.remove(cookieHelper.COOKIE_KEYS.REFRESH_TOKEN);
-    toast.warn("Session expired, please sign in again!", { toastId: TOAST_TOKEN.EXPIRED });
-    window.open(
-      import.meta.env.VITE_DEV_AUTHORITY_LOGOUT,
-      "height=768,width=400,left=100,top=30,titlebar=no,toolbar=no,menubar=no,location=no,directories=no,status=no",
-      "_blank"
-    );
+    toast.warn("Session expired, please wait for new session!", { toastId: TOAST_TOKEN.EXPIRED });
+    location.reload();
   }
   if (graphQLErrors) {
     graphQLErrors.forEach(({ message, locations, path }) => {
