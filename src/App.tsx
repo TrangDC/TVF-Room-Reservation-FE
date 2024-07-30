@@ -59,20 +59,6 @@ function App() {
     return returnData;
   };
 
-  //   const handleCheckToken = async (t: string) => {
-  //     const res = await fetch(import.meta.env.VITE_DEV_CHECK_TOKEN, {
-  //       method: "POST",
-  //       body: JSON.stringify({ access_token: t })
-  //     });
-  //     console.log("1");
-  //     if (res.status === 401) {
-  //       toast.warn("Session expired please sign in again!", { toastId: TOAST_TOKEN.EXPIRED });
-  //       return false;
-  //     } else if (res.status === 200) {
-  //       return true;
-  //     }
-  //   };
-
   const handleSetRole = async (oid: string, email: string, name: string) => {
     try {
       const { data } = await GetUserByOID({ variables: { oID: oid } });
