@@ -17,6 +17,7 @@ const Select = <T extends { id: string; name: string }>({
   optionClass,
   labelClass,
   containerClass,
+  required = false,
   name,
   options,
   defaultValue,
@@ -33,7 +34,9 @@ const Select = <T extends { id: string; name: string }>({
   };
   return (
     <label htmlFor='form' className={containerClass + " block text-sm font-medium text-gray-900"}>
-      <span className={labelClass}>{label}:</span>
+      <span className={labelClass}>
+        {label} {required && <span className='text-xl text-red-500'>*</span>}:
+      </span>
       <select
         id={name}
         name={name}
@@ -44,9 +47,6 @@ const Select = <T extends { id: string; name: string }>({
         value={selectedOption}
         onChange={handleOnchange}
       >
-        <option value='' disabled>
-          --- {label} ---
-        </option>
         {options &&
           options.map((option) => (
             <option className={optionClass} key={option.id} value={option.id}>

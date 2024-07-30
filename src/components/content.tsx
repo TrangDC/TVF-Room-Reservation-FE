@@ -17,7 +17,7 @@ function Content() {
   const [GetBooking] = useLazyQuery(GET_BOOKING);
   const [CancelBooking] = useMutation(DELETE_BOOKING);
   const [idDelete, setIdDelete] = useState<string>("");
-  const { officeId, setDateRange, setOfficeId } = useBookingStore();
+  const { officeId, setDateRange } = useBookingStore();
   const [dateRangeData, setDateRangeData] = useState<IDateRange>({
     startDate: "",
     endDate: ""
@@ -28,10 +28,6 @@ function Content() {
     handleRefetchBookings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dateRangeData, officeId]);
-
-  const handleSelectOfficeSorting = (officeId: string) => {
-    setOfficeId(officeId);
-  };
 
   const handleDatesSet = (startDate: string, endDate: string) => {
     setDateRange({ startDate, endDate });
@@ -72,7 +68,8 @@ function Content() {
     GetBooking({
       variables: {
         bookingID: id
-      }
+      },
+      fetchPolicy: "network-only"
     });
   };
 
@@ -94,16 +91,12 @@ function Content() {
       />
       <div className='home-container w-full flex flex-col items-center justify-center mb-8 md:mb-0'>
         <div className='home-wrapper w-[90%] flex flex-col-reverse md:flex-row justify-center'>
-          <FormEventComponent
-            clickedDate={clickedDate}
-            onRefetchBookings={handleRefetchBookings}
-          />
+          <FormEventComponent clickedDate={clickedDate} onRefetchBookings={handleRefetchBookings} />
           <CalendarComponent
             onClickDate={handleClickedDate}
             onEditBooking={handleEditBooking}
             onDeleteBooking={handleDeleteBooking}
             bookings={bookings?.GetBookings?.data}
-            handleSelectOfficeSorting={handleSelectOfficeSorting}
             onDatesSet={handleDatesSet}
           />
         </div>

@@ -12,6 +12,7 @@ import Button from "../../common/button/button";
 import InputField from "../../common/Input";
 import Select from "../../common/select";
 import RoomInfo from "../../room";
+import { useNavigate } from "react-router";
 
 interface IFormEventComponent {
   defaultValue?: IFormEvent;
@@ -42,7 +43,8 @@ function FormEvent({
     () => localStorageHelper.get(localStorageHelper.LOCAL_STORAGE_KEYS.FORM_DATA),
     []
   );
-  const { clearBookingDetails, clearBookingId } = useBookingStore();
+  const navigate = useNavigate();
+  const { clearBookingDetails, clearBookingId, setOfficeId } = useBookingStore();
   const reservationDayRef = useRef<HTMLInputElement>(null);
   const endDateRef = useRef<HTMLInputElement>(null);
   const currentDate = new Date();
@@ -124,17 +126,15 @@ function FormEvent({
 
   function handleSelectOffice(officeId: string) {
     localStorageHelper.set(localStorageHelper.LOCAL_STORAGE_KEYS.FORM_MEETING_OFFICEID, officeId);
+    setOfficeId(officeId);
     setFormData((prev) => ({ ...prev, roomId: "", officeId }));
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     let inputValue: string = value;
-
-    if (name === "title") {
-      const trimmedReservationInfo = value.replace(/\s+/g, " ").trim();
-      inputValue = trimmedReservationInfo;
-    }
 
     if (name === "reservationDay" || name === "endDate") {
       if (name === "reservationDay") {
@@ -287,8 +287,10 @@ function FormEvent({
       endDateFormat = `${formData.reservationDay}T${formData.endTime}:00Z`;
     }
 
+    const trimmedReservationInfo = formData?.title && formData.title.replace(/\s+/g, " ").trim();
+
     const newEvent = {
-      title: formData.title || "",
+      title: trimmedReservationInfo || "",
       roomId: formData.roomId || "",
       officeId: formData.officeId || "",
       startDate: startDateFormat,
@@ -334,6 +336,7 @@ function FormEvent({
   const handleCancelEdit = () => {
     clearBookingDetails();
     clearBookingId();
+    navigate("/");
     setFormData((prev) => {
       return {
         ...prev,
@@ -360,6 +363,7 @@ function FormEvent({
                 name='office'
                 containerClass='flex flex-col mb-4 w-full mb-[10px]'
                 labelClass='mr-5 text-lg text-black'
+                required={true}
                 selectClass='!text-[16px] !p-[8px] cursor-pointer'
                 defaultValue={formData.officeId || ""}
                 options={offices}
@@ -369,9 +373,10 @@ function FormEvent({
             )}
 
             <InputField
-              type='text'
+              type='textarea'
               name='title'
               id='title'
+              required={true}
               maxLength={200}
               label='Reservation Information'
               value={formData.title}
@@ -383,6 +388,7 @@ function FormEvent({
               type='date'
               name='reservationDay'
               id='reservationDay'
+              required={true}
               ref={reservationDayRef}
               label='Reservation Day'
               // max={formData.endDate}
@@ -393,7 +399,7 @@ function FormEvent({
 
             <div className='relative z-0 w-full mb-[20px] group'>
               <label htmlFor='startTime' className='text-gray-500'>
-                Start at:
+                Start at: <span className='text-xl text-red-500'>*</span>
               </label>
               <select
                 id='startTime'
@@ -419,7 +425,7 @@ function FormEvent({
 
             <div className='relative z-0 w-full mb-[20px] group'>
               <label htmlFor='endTime' className='text-gray-500'>
-                End at:
+                End at: <span className='text-xl text-red-500'>*</span>
               </label>
               <select
                 id='endTime'
@@ -461,6 +467,7 @@ function FormEvent({
                 type='date'
                 name='endDate'
                 id='endDate'
+                required={true}
                 label='End Date'
                 ref={endDateRef}
                 onClick={() => endDateRef.current?.showPicker()}

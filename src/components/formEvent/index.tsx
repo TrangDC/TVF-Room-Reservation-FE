@@ -18,8 +18,6 @@ interface IFormEventComponent {
 const FormEventComponent = ({ clickedDate, onRefetchBookings }: IFormEventComponent) => {
   const { id: bookingId } = useParams();
   const [isDataEdit, setIsDataEdit] = useState<boolean>(!!bookingId);
-  //const { bookingId, clearBookingId } = useBookingStore();
-  //const [ isDataEdit, setIsDataEdit] = useState<boolean>(false);
   const { data: officesData } = useQuery(GET_OFFICES);
   const [CreateBooking] = useMutation(CREATE_BOOKING, {
     errorPolicy: "all"
@@ -45,7 +43,7 @@ const FormEventComponent = ({ clickedDate, onRefetchBookings }: IFormEventCompon
   }, [bookingId]);
 
   const handleGetFormData = (data: IFormData, getSelectedOfficeId: string) => {
-    if (!data.reservationDay) return;
+    if (!data.reservationDay || !data.officeId) return;
 
     getAvailableRooms({
       variables: {
