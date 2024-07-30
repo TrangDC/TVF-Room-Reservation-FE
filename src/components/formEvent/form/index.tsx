@@ -373,7 +373,7 @@ function FormEvent({
             )}
 
             <InputField
-              type='textarea'
+              type='text'
               name='title'
               id='title'
               required={true}
