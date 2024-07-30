@@ -13,4 +13,15 @@ export interface IBooking {
   color: string;
   creatorEmail?: string;
   isRepeat: boolean;
+  title: string;
+  start: string;
+  end: string;
+  name: string;
+  floor: string;
+  backgroundColor: string;
+}
+
+export interface IDateRange {
+  startDate: string;
+  endDate: string;
 }

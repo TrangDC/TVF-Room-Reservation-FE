@@ -5,6 +5,12 @@ export interface IOfficeApi {
   rooms: IRoomApi[];
 }
 
+export interface IOffice {
+  id: string;
+  name: string;
+  description: string;
+}
+
 export interface IRoomApi {
   id: string;
   name: string;

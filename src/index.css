@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -8,7 +8,7 @@
   padding: 0;
   margin: 0;
   box-sizing: border-box;
-  font-family: 'Quicksand', sans-serif;
+  font-family: "Quicksand", sans-serif;
   line-height: 1.5;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -42,8 +42,6 @@ body {
   -moz-user-select: none !important;
   -ms-user-select: none !important;
   user-select: none !important;
-
-  
 }
 
 *::-webkit-scrollbar {
@@ -53,7 +51,7 @@ body {
 
 *::-webkit-scrollbar-thumb {
   border-radius: 4px;
-  background-color: #0041f3;
+  background-color: #e8e9ec;
 }
 
 *::-webkit-scrollbar-track {
@@ -62,8 +60,7 @@ body {
   background-color: rgba(0, 0, 0, 0);
 }
 
-.MuiDataGrid-cell{
+.MuiDataGrid-cell {
   display: flex;
   justify-content: center;
 }
-

@@ -18,13 +18,10 @@ import { toast } from "react-toastify";
 import { TOAST_TOKEN } from "./constants/toastId.ts";
 import { BrowserRouter } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
-
-// Adds messages only in a dev environment
-// loadDevMessages();
-// loadErrorMessages();
+import useUserStore from "./store/store.ts";
+import { localStorageHelper } from "./utils/localStorage.ts";
 
 const msalInstance = new PublicClientApplication(msalConfig);
-
 const httpLink = createHttpLink({
   uri: import.meta.env.VITE_DEV_BACK_END_API,
   credentials: "same-origin"
@@ -54,8 +51,8 @@ const getNewToken = async () => {
 
 const authLink = setContext(async (_, { headers }) => {
   const token = cookieHelper.get(cookieHelper.COOKIE_KEYS.ACCESS_TOKEN);
+  //   await handleCheckToken(token as string);
   const decoded = jwtDecode(token as string);
-
   // check expire accesstoken and get new accesstoken
   if (decoded.exp) {
     if (Date.now() <= decoded.exp * 1000) {
@@ -76,31 +73,43 @@ const authLink = setContext(async (_, { headers }) => {
         }
       };
     }
+  } else {
+    toast.warn("Session expired, please sign in again!", { toastId: TOAST_TOKEN.EXPIRED });
+    window.location.href = "http://localhost:5173/error";
   }
 });
 
 // catch error UNAUTHENTICATED when call api
-const logoutLink = onError(({ graphQLErrors, networkError, operation, forward }) => {
-  if (graphQLErrors) {
-    // eslint-disable-next-line prefer-const
-    for (let err of graphQLErrors) {
-      switch (err.extensions.code) {
-        case "UNAUTHENTICATED": {
-          const oldHeaders = operation.getContext().headers;
-          operation.setContext({
-            headers: {
-              ...oldHeaders,
-              authorization: getNewToken()
-            }
-          });
-          return forward(operation);
-        }
-      }
-    }
+const logoutLink = onError(({ graphQLErrors, networkError, operation }) => {
+  // check case 401
+  const { response } = operation.getContext();
+  if (response.status === 401) {
+    localStorageHelper.clearAll();
+    useUserStore.persist.clearStorage();
+    cookieHelper.remove(cookieHelper.COOKIE_KEYS.ACCESS_TOKEN);
+    cookieHelper.remove(cookieHelper.COOKIE_KEYS.REFRESH_TOKEN);
+    toast.warn("Session expired, please sign in again!", { toastId: TOAST_TOKEN.EXPIRED });
+    window.open(
+      import.meta.env.VITE_DEV_AUTHORITY_LOGOUT,
+      "height=768,width=400,left=100,top=30,titlebar=no,toolbar=no,menubar=no,location=no,directories=no,status=no",
+      "_blank"
+    );
   }
-
+  if (graphQLErrors) {
+    graphQLErrors.forEach(({ message, locations, path }) => {
+      if (message === "Unauthorized") {
+        console.error(
+          `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
+        );
+      } else {
+        console.error(
+          `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
+        );
+      }
+    });
+  }
   if (networkError) {
-    console.error(`[Network error]: ${networkError}`);
+    console.error("[Network error]:", networkError);
   }
 });
 

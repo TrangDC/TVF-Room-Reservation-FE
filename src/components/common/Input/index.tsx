@@ -19,14 +19,13 @@ interface InputFieldProps
 const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
   ({ label, id, onChange, value = "", ...props }, ref) => {
     const [inputValue, setInputValue] = useState<string>("");
-
     useEffect(() => {
       setInputValue(value as string);
     }, [value]);
 
     const handleInputOnchange = (e: ChangeEvent<HTMLInputElement>) => {
+      // setInputValue(e.target.value);
       onChange && onChange(e);
-      setInputValue(e.target.value);
     };
 
     return (

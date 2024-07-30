@@ -1,6 +1,4 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { IUser } from "../../types/interfaces/user";
-import { localStorageHelper } from "../../utils/localStorage";
 import { FaUsersGear } from "react-icons/fa6";
 import { TbCheckbox } from "react-icons/tb";
 import { TiHomeOutline } from "react-icons/ti";
@@ -10,11 +8,7 @@ import { USER_ROLE } from "../../constants/role";
 function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { role } = useUserStore((state) => state.user);
-  const user: IUser | undefined = localStorageHelper.get(
-    localStorageHelper.LOCAL_STORAGE_KEYS.AUTH_USER
-  );
-
+  const { username, role } = useUserStore((state) => state.user);
   const handleRedirectHomePage = () => {
     navigate("/");
   };
@@ -25,7 +19,7 @@ function Sidebar() {
       <div className='sidebar-wrapper'>
         <div
           onClick={handleRedirectHomePage}
-          className='bg-[#ffffff] w-full py-[20px] flex justify-center'
+          className='bg-[#ffffff] w-full py-[20px] flex justify-center cursor-pointer'
         >
           <div className='w-[90%]'>
             <div className='semi_md:block logo'>
@@ -35,7 +29,8 @@ function Sidebar() {
               />
             </div>
             <div className='user-info mt-[10px] text-[#3a3a3a] font-[700]'>
-              {user && <span>{user.username}</span>}
+              {/* {user && <span>{user.username}</span>} */}
+              <span>{username}</span>
             </div>
           </div>
         </div>

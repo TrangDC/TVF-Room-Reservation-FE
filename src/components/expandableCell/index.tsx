@@ -11,9 +11,9 @@ function ExpandableCell({ value }: GridRenderCellParams) {
           whiteSpace: "pre-wrap"
         }}
       >
-        {expanded ? value : value?.toString().slice(0, 30)}
+        {expanded ? value : value?.toString().slice(0, 80)}
       </span>
-      {value?.length > 30 && (
+      {value?.length > 80 && (
         <span
           className='cursor-pointer text-xs underline text-primary-blue'
           onClick={() => setExpanded(!expanded)}

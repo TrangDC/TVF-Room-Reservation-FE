@@ -1,84 +1,14 @@
-import { useEffect, useState } from "react";
 import { PiSignOutBold } from "react-icons/pi";
 import { TbUserHexagon } from "react-icons/tb";
 import { cookieHelper } from "../../utils/cookie.ts";
 import Button from "../common/button/button.tsx";
-import { jwtDecode } from "jwt-decode";
 import { useMsal } from "@azure/msal-react";
-import { useNavigate } from "react-router";
-import { useLazyQuery } from "@apollo/client";
-import Loading from "../loading/index.tsx";
-import { GET_ROLE_USER } from "../../api/booking/query.ts";
 import useUserStore from "../../store/store.ts";
 
 function Navbar() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [userInfo, setUserInfo] = useState({ email: "", name: "" });
-  const { user } = useUserStore();
-  const [GetUserByOID, { data: oidData, loading: roleLoading }] = useLazyQuery(GET_ROLE_USER);
-  const navigate = useNavigate();
-  const storedToken = cookieHelper.get(cookieHelper.COOKIE_KEYS.ACCESS_TOKEN);
-  const queryString = window.location.search;
-  const urlParams = new URLSearchParams(queryString);
-  const accesstoken = urlParams.get("accessToken") || "";
-  const refreshtoken = urlParams.get("refreshToken") || "";
+  const user = useUserStore((state) => state.user);
   const { instance } = useMsal();
-  const { setUser } = useUserStore();
-
-  const handleDecodeToken = (accesstoken: string) => {
-    const token = accesstoken;
-    const { email, name, oid }: { email: string; name: string; oid: string } = jwtDecode(token);
-    setUserInfo({ email, name });
-    const returnData = { email: email, name: name, oid: oid };
-    return returnData;
-  };
-
-  const handleSetRole = async (oid: string, email: string, name: string) => {
-    try {
-      const { data } = await GetUserByOID({ variables: { oID: oid } });
-      setUser({
-        username: name,
-        email: email,
-        role: data.GetUserByOID.roles[0].machineName
-      });
-      navigate("/");
-    } catch (error) {
-      console.error("Error setting user role:", error);
-    }
-  };
-
-  useEffect(() => {
-    if (!accesstoken && !storedToken) {
-      handleRedirectRoute();
-    }
-    if (accesstoken) {
-      cookieHelper.set(cookieHelper.COOKIE_KEYS.ACCESS_TOKEN, accesstoken);
-      const { email, name, oid } = handleDecodeToken(accesstoken);
-      handleSetRole(email, name, oid);
-      navigate("/");
-    }
-    if (refreshtoken) {
-      cookieHelper.set(cookieHelper.COOKIE_KEYS.REFRESH_TOKEN, refreshtoken);
-    }
-    if (storedToken) {
-      handleDecodeToken(storedToken);
-      const { oid } = handleDecodeToken(storedToken);
-      GetUserByOID({ variables: { oID: oid } });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storedToken, accesstoken, queryString]);
-
-  useEffect(() => {
-    if (oidData)
-      setUser({
-        username: userInfo.name,
-        email: userInfo.email,
-        role: oidData.GetUserByOID.roles[0].machineName
-      });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [oidData]);
-
-  if (roleLoading) return <Loading />;
   const handleRedirectRoute = () => {
     window.location.href = import.meta.env.VITE_DEV_AUTHORITY_LOGIN;
   };
@@ -110,7 +40,7 @@ function Navbar() {
               </span>
             </div>
           )}
-          {!(accesstoken || storedToken) && (
+          {!user.role && (
             <Button
               className='!flex text-[16px] text-[#fff] px-[16px] py-[8px] !bg-[#0070BA] rounded-[8px]'
               onClick={handleRedirectRoute}
@@ -119,7 +49,7 @@ function Navbar() {
               <span className=''>Login</span>
             </Button>
           )}
-          {(accesstoken || storedToken) && (
+          {user.role && (
             <Button
               className='!flex text-[16px] text-[#fff] px-[16px] py-[8px] !bg-[#0070BA] rounded-[8px]'
               onClick={handleLogout}

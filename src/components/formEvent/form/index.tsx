@@ -49,7 +49,6 @@ function FormEvent({
   const currentYear = currentDate.getFullYear();
   const currentMonth = String(currentDate.getMonth() + 1).padStart(2, "0"); // Months are zero-based
   const currentDay = String(currentDate.getDate()).padStart(2, "0");
-
   // Format the date as YYYY-MM-DD
   const formattedCurrentDate = `${currentYear}-${currentMonth}-${currentDay}`;
   const [formData, setFormData] = useState<IFormData>({
@@ -65,23 +64,36 @@ function FormEvent({
 
   useEffect(() => {
     if (!getFormDataLocalStorage) return;
-    setFormData(getFormDataLocalStorage as IFormData);
+    setFormData((prev) => {
+      return { ...prev, ...getFormDataLocalStorage };
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getFormDataLocalStorage]);
 
   useEffect(() => {
-    if (!isEdit) return;
-
-    setFormData({
-      isRepeat: dataEdit?.isRepeat || false,
-      title: dataEdit?.title,
-      reservationDay: dataEdit?.startDate?.slice(0, 10),
-      startTime: dataEdit?.startDate?.slice(11, 16),
-      endTime: dataEdit?.endDate?.slice(11, 16),
-      endDate: dataEdit?.endDate?.slice(0, 10),
-      roomId: dataEdit?.room?.id,
-      officeId: dataEdit?.office?.id
-    });
+    if (isEdit) {
+      setFormData({
+        isRepeat: dataEdit?.isRepeat || false,
+        title: dataEdit?.title,
+        reservationDay: dataEdit?.startDate?.slice(0, 10),
+        startTime: dataEdit?.startDate?.slice(11, 16),
+        endTime: dataEdit?.endDate?.slice(11, 16),
+        endDate: dataEdit?.endDate?.slice(0, 10),
+        roomId: dataEdit?.room?.id,
+        officeId: dataEdit?.office?.id
+      });
+    } else {
+      setFormData({
+        isRepeat: false,
+        title: "",
+        reservationDay: formattedCurrentDate,
+        startTime: "09:00",
+        endTime: "",
+        endDate: "",
+        roomId: "",
+        officeId: getSelectedOfficeId
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEdit, dataEdit]);
 
@@ -297,10 +309,8 @@ function FormEvent({
         const hour = String(h).padStart(2, "0");
         const minute = String(m).padStart(2, "0");
         const time = `${hour}:${minute}`;
-
         if (startTime && time <= startTime) continue;
         if (endTime && time >= endTime) continue;
-
         times.push(time);
       }
     }
@@ -342,13 +352,13 @@ function FormEvent({
   return (
     <div className='form-container'>
       <div className='form-wrapper w-[100%] flex flex-col items-center md:items-start '>
-        <p className='font-[700] text-[20px]'>TECHVIFY - Meeting Form</p>
+        <p className='font-[700] text-[20px] mb-[3px]'>TECHVIFY - Meeting Form</p>
         <div className='flex-col items-center flex md:flex-row w-full'>
           <form onSubmit={handleSubmit} className='w-full'>
             {offices && offices.length > 0 && (
               <Select
                 name='office'
-                containerClass='flex flex-col mb-4 w-full my-[10px]'
+                containerClass='flex flex-col mb-4 w-full mb-[10px]'
                 labelClass='mr-5 text-lg text-black'
                 selectClass='!text-[16px] !p-[8px] cursor-pointer'
                 defaultValue={formData.officeId || ""}

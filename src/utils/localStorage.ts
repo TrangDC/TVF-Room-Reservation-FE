@@ -5,8 +5,7 @@ const LOCAL_STORAGE_KEYS = {
   FORM_MEETING_OFFICEID: "form_meeting_officeId",
   ADMIN_SELECT_OFFICEID: "admin_select_officeId",
   AUTH_USER: "auth_user",
-  START_DATE: "start_date",
-  END_DATE: "end_date"
+  DATE_RANGE: "date_range"
 };
 
 const get = <T>(key: string): T | undefined => {

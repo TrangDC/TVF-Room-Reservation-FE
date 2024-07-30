@@ -1,18 +1,17 @@
 import { ChangeEvent, SelectHTMLAttributes, useEffect, useState } from "react";
-import { IOfficeApi } from "../../../api/office/type";
 
-interface ISelect extends SelectHTMLAttributes<HTMLSelectElement> {
+interface ISelect<T> extends SelectHTMLAttributes<HTMLSelectElement> {
   selectClass?: string;
   optionClass?: string;
   containerClass?: string;
   labelClass?: string;
   label?: string;
-  options?: IOfficeApi[];
+  options?: T[];
   onSelectOption: (e: string) => void;
   defaultValue: string | undefined;
 }
 
-const Select = ({
+const Select = <T extends { id: string; name: string }>({
   onSelectOption,
   selectClass,
   optionClass,
@@ -22,21 +21,18 @@ const Select = ({
   options,
   defaultValue,
   label = "select"
-}: ISelect) => {
+}: ISelect<T>) => {
   const [selectedOption, setSelectedOption] = useState<string | undefined>("");
   useEffect(() => {
-    setSelectedOption(defaultValue)
-  }, [defaultValue])
+    setSelectedOption(defaultValue);
+  }, [defaultValue]);
 
   const handleOnchange = (e: ChangeEvent<HTMLSelectElement>) => {
     setSelectedOption(e.target.value);
     onSelectOption && onSelectOption(e.target.value);
   };
   return (
-    <label
-      htmlFor='form'
-      className={containerClass + " block mb-2 text-sm font-medium text-gray-900"}
-    >
+    <label htmlFor='form' className={containerClass + " block text-sm font-medium text-gray-900"}>
       <span className={labelClass}>{label}:</span>
       <select
         id={name}

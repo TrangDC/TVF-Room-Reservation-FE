@@ -6,7 +6,7 @@ export interface IRoom {
   status: boolean;
   description: string;
   imageUrl: string;
-  officeId: string;
+  officeId?: string;
 }
 
 export interface IFormAvailbleRoom {

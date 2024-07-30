@@ -1,4 +1,4 @@
-import { useLazyQuery, useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import FullCalendar from "@fullcalendar/react";
@@ -8,21 +8,20 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import "tippy.js/dist/tippy.css";
 import "tippy.js/themes/light.css";
-import { GET_BOOKINGS } from "../../api/booking/query";
 import { IBookingAPI } from "../../api/booking/type";
 import { GET_OFFICES } from "../../api/office/query";
 import { IOfficeApi } from "../../api/office/type";
 import { TOAST_CALENDAR_ID } from "../../constants/toastId";
 import useBookingStore from "../../store/bookingStore";
+import useUserStore from "../../store/store";
 import { IExtendedProps } from "../../types/interfaces/calendar";
 import { IEvent } from "../../types/interfaces/event";
-import { localStorageHelper } from "../../utils/localStorage";
 import { dateToStringTime } from "../../utils/timeFormat";
 import Button from "../common/button/button";
 import Modal from "../common/modal";
 import Select from "../common/select";
 import "./index.scss";
-import useUserStore from "../../store/store";
+import { useNavigate } from "react-router";
 
 interface CalendarComponentProps {
   events?: IEvent[];
@@ -32,7 +31,6 @@ interface CalendarComponentProps {
   onClickDate: (date: string) => void;
   onEditBooking?: (id: string) => void;
   onDeleteBooking: (id: string) => void;
-  selectedOffice: string;
   bookings: [];
   handleSelectOfficeSorting: (officeId: string) => void;
   onDatesSet: (startDate: string, endDate: string) => void;
@@ -46,6 +44,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
   events,
   initialView = "dayGridMonth",
   //onEditBooking,
+  bookings,
   onDeleteBooking,
   onClickDate,
   weekends = true,
@@ -53,44 +52,17 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
   onDatesSet
 }) => {
   const user = useUserStore((state) => state.user);
-  const getSelectOffice =
-    localStorageHelper.get<string>(
-      localStorageHelper.LOCAL_STORAGE_KEYS.CALENDAR_SELECT_OFFICEID
-    ) || "";
-  const [selectedOffice, setSelectedOffice] = useState<string>("");
   const [selectOptions, setSelectOptions] = useState<IOfficeApi[]>();
   const { data: officesData } = useQuery<{ GetOffices: IOfficeApi[] }>(GET_OFFICES);
-  const [getBookings, { data: bookings }] = useLazyQuery(GET_BOOKINGS);
   const calendarRef = useRef<FullCalendar>(null); // Ref to FullCalendar instance
-  const [startDate, setStartDate] = useState<string>(""); // State to hold startDate
-  const [endDate, setEndDate] = useState<string>(""); // State to hold endDate
-  const { setBookingId } = useBookingStore();
-
-  // useEffect(() => {
-  //   if (
-  //     (officeError?.networkError instanceof Error &&
-  //       (officeError?.networkError as Error).message.includes("401")) ||
-  //     (bookingError?.networkError instanceof Error &&
-  //       (bookingError?.networkError as Error).message.includes("401"))
-  //   ) {
-  //     toast.warn("Session expired please sign in again!", {
-  //       toastId: TOAST_TOKEN.EXPIRED
-  //     });
-  //   }
-  // }, [officeError, bookingError]);
-
-  // const handleDatesSet = (arg: { start: Date; end: Date }) => {
-  //   setStartDate(arg.start.toISOString().split("T")[0]);
-  //   setEndDate(arg.end.toISOString().split("T")[0]);
-  //   onDatesSet(startDate, endDate);
-  // };
-
-  useEffect(() => {
-    if (officesData) {
-      handleSelectOfficeSorting(getSelectOffice || officesData.GetOffices[0].id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [officesData]);
+  const [newBookings, setNewBookings] = useState<IEvent[]>(); // State to hold endDate
+  const { officeId, setOfficeId } = useBookingStore();
+  const navigate = useNavigate();
+  const handleDatesSet = (arg: { startStr: string; endStr: string }) => {
+    const getStartDate = arg.startStr.split("T")[0];
+    const getEndDate = arg.endStr.split("T")[0];
+    onDatesSet(getStartDate, getEndDate);
+  };
 
   useEffect(() => {
     const newOfficesData: IOfficeApi[] =
@@ -104,71 +76,53 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
     setSelectOptions(newOfficesData);
   }, [officesData]);
 
+  useEffect(() => {
+    handleMappingBookingsData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookings]);
+
+  const handleMappingBookingsData = () => {
+    if (bookings) {
+      events = bookings?.map((booking: IBookingAPI) => {
+        const startRecur = new Date(`${booking.startDate}`);
+        const endRecur = new Date(`${booking.endDate}`);
+
+        const getFormattedTime = (date: Date): string => {
+          const hours = date.getUTCHours().toString().padStart(2, "0");
+          const minutes = date.getUTCMinutes().toString().padStart(2, "0");
+          return `${hours}:${minutes}`;
+        };
+        const startTime = getFormattedTime(startRecur);
+        const endTime = getFormattedTime(endRecur);
+
+        return {
+          id: booking.id,
+          title: booking.title,
+          start: startRecur,
+          end: endRecur,
+          name: booking.room?.name,
+          floor: booking.room?.floor,
+          backgroundColor: booking.room?.color,
+          branchID: booking.office.id,
+          roomID: booking.room?.id,
+          startTime: startTime,
+          endTime: endTime,
+          dateStart: booking.startDate,
+          dateEnd: booking.endDate,
+          creatorEmail: booking.user.workEmail,
+          isRepeat: booking.isRepeat,
+          startRecur: startRecur,
+          endRecur: endRecur,
+          daysOfWeek: ["1", "2", "3", "4", "5"]
+        };
+      });
+      setNewBookings(events);
+    }
+  };
+
   const handleSelectOfficeSorting = (officeId: string) => {
-    if (!startDate && !endDate && !officeId) return;
-
-    localStorageHelper.set(
-      localStorageHelper.LOCAL_STORAGE_KEYS.CALENDAR_SELECT_OFFICEID,
-      officeId
-    );
-    setSelectedOffice(officeId);
-    getBookings({
-      variables: {
-        filter: {
-          startDate,
-          endDate,
-          officeId
-        }
-      }
-    });
+    setOfficeId(officeId);
   };
-
-  const handleDatesSet = (arg: { start: Date; end: Date }) => {
-    const getStartDate = arg.start.toISOString().split("T")[0];
-    const getEndDate = arg.end.toISOString().split("T")[0];
-    setStartDate(getStartDate);
-    setEndDate(getEndDate);
-    localStorageHelper.set(localStorageHelper.LOCAL_STORAGE_KEYS.START_DATE, getStartDate);
-    localStorageHelper.set(localStorageHelper.LOCAL_STORAGE_KEYS.END_DATE, getEndDate);
-    onDatesSet(getStartDate, getEndDate);
-    handleSelectOfficeSorting(selectedOffice);
-  };
-
-  if (bookings) {
-    events = bookings.GetBookings.map((booking: IBookingAPI) => {
-      const startRecur = new Date(`${booking.startDate}`);
-      const endRecur = new Date(`${booking.endDate}`);
-
-      const getFormattedTime = (date: Date): string => {
-        const hours = date.getUTCHours().toString().padStart(2, "0");
-        const minutes = date.getUTCMinutes().toString().padStart(2, "0");
-        return `${hours}:${minutes}`;
-      };
-      const startTime = getFormattedTime(startRecur);
-      const endTime = getFormattedTime(endRecur);
-
-      return {
-        id: booking.id,
-        title: booking.title,
-        start: startRecur,
-        end: endRecur,
-        name: booking.room?.name,
-        floor: booking.room?.floor,
-        backgroundColor: booking.room?.color,
-        branchID: booking.office.id,
-        roomID: booking.room?.id,
-        startTime: startTime,
-        endTime: endTime,
-        dateStart: booking.startDate,
-        dateEnd: booking.endDate,
-        creatorEmail: booking.user.workEmail,
-        isRepeat: booking.isRepeat,
-        startRecur: startRecur,
-        endRecur: endRecur,
-        daysOfWeek: ["1", "2", "3", "4", "5"]
-      };
-    });
-  }
 
   const handleDateClick = (info: { dateStr: string }) => {
     const clickedDate = info.dateStr;
@@ -194,7 +148,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
   };
 
   const handleOnClickEditBtn = (id: string) => {
-    setBookingId(id);
+    navigate(`/edit/${id}`);
   };
 
   const handleOnClickDeleteBtn = (id: string) => {
@@ -203,11 +157,27 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
 
   function renderEventContent(eventInfo: { event: ICalendarEvent }) {
     const { title, backgroundColor, start, end, id } = eventInfo.event;
-
     const { name, floor, creatorEmail } = eventInfo.event.extendedProps;
 
     const startTime = dateToStringTime(start);
     const endTime = dateToStringTime(end);
+
+    const handleOnClickEvent = (e: React.MouseEvent) => {
+      const meetingElParentEl = (e.target as HTMLElement).parentElement?.parentElement;
+
+      // Remove z-index from previously clicked element
+      const previouslyClicked = document.querySelector('[data-clicked="true"]') as HTMLElement;
+      if (previouslyClicked) {
+        previouslyClicked.style.removeProperty("z-index");
+        previouslyClicked.removeAttribute("data-clicked");
+      }
+
+      // Set z-index for the newly clicked element
+      if (meetingElParentEl) {
+        meetingElParentEl.style.zIndex = "999";
+        meetingElParentEl.setAttribute("data-clicked", "true");
+      }
+    };
     return (
       <Tippy
         interactive={true}
@@ -256,6 +226,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
         <div
           className='event flex flex-col h-[100%] w-full cursor-pointer'
           style={{ background: backgroundColor }}
+          onClick={handleOnClickEvent}
         >
           <span>{title}</span>
         </div>
@@ -264,20 +235,20 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
   }
   // Disable Date in the Past
   return (
-    <>
+    <div className='calendar-container w-full md:w-[66%] md:ml-[10px]'>
       <Modal isShow={false} />
 
-      <div className='sticky top-[110px]'>
+      <div className='sticky top-[92px]'>
         {selectOptions && selectOptions.length > 0 && (
           <Select
-            containerClass='flex flex-row items-center mb-4 w-full my-[10px]'
+            containerClass='flex flex-row items-center mb-[21px] w-full'
             labelClass='mr-5 text-lg text-black'
             selectClass='!text-[16px] py-[8px] px-[10px] cursor-pointer w-[130px]'
             // options={officesData}
             options={selectOptions}
             onSelectOption={handleSelectOfficeSorting}
             label='Office'
-            defaultValue={selectedOffice}
+            defaultValue={officeId}
           />
         )}
 
@@ -301,13 +272,13 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
           }}
           height={height}
           weekends={weekends}
-          events={events}
+          events={newBookings}
           eventContent={renderEventContent}
           dateClick={handleDateClick}
           dayMaxEventRows={4}
         />
       </div>
-    </>
+    </div>
   );
 };
 

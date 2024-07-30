@@ -1,25 +1,28 @@
 import { gql } from "@apollo/client";
 
 export const GET_BOOKINGS = gql`
-  query GetBookings($filter: BookingFilter!) {
-    GetBookings(filter: $filter) {
-      id
-      office {
+  query GetBookings($filter: BookingFilter!, $pagination: PaginationInput) {
+    GetBookings(filter: $filter, pagination: $pagination) {
+      data {
         id
-        name
+        title
+        startDate
+        endDate
+        office {
+          id
+          name
+        }
+        room {
+          name
+          color
+          floor
+        }
+        user {
+          workEmail
+        }
+        isRepeat
       }
-      room {
-        name
-        color
-        floor
-      }
-      title
-      startDate
-      endDate
-      user {
-        workEmail
-      }
-      isRepeat
+      total
     }
   }
 `;

@@ -5,9 +5,10 @@ import { CREATE_BOOKING, GET_BOOKING, UPDATE_BOOKING } from "../../api/booking/q
 import { GET_OFFICES } from "../../api/office/query";
 import { GET_AVAILBLE_ROOM } from "../../api/room/query";
 import { TOAST_FORM_ID } from "../../constants/toastId";
-import useBookingStore from "../../store/bookingStore";
+//import useBookingStore from "../../store/bookingStore";
 import { IFormData, IFormEvent } from "../../types/interfaces/event";
 import FormEvent from "./form";
+import { useParams } from "react-router-dom";
 
 interface IFormEventComponent {
   clickedDate: string;
@@ -15,8 +16,10 @@ interface IFormEventComponent {
 }
 
 const FormEventComponent = ({ clickedDate, onRefetchBookings }: IFormEventComponent) => {
-  const { bookingId, clearBookingId } = useBookingStore();
-  const [isDataEdit, setIsDataEdit] = useState<boolean>(false);
+  const { id: bookingId } = useParams();
+  const [isDataEdit, setIsDataEdit] = useState<boolean>(!!bookingId);
+  //const { bookingId, clearBookingId } = useBookingStore();
+  //const [ isDataEdit, setIsDataEdit] = useState<boolean>(false);
   const { data: officesData } = useQuery(GET_OFFICES);
   const [CreateBooking] = useMutation(CREATE_BOOKING, {
     errorPolicy: "all"
@@ -36,6 +39,8 @@ const FormEventComponent = ({ clickedDate, onRefetchBookings }: IFormEventCompon
   useEffect(() => {
     if (bookingId) {
       setIsDataEdit(true);
+    } else {
+      setIsDataEdit(false);
     }
   }, [bookingId]);
 
@@ -52,7 +57,8 @@ const FormEventComponent = ({ clickedDate, onRefetchBookings }: IFormEventCompon
           isRepeat: data.isRepeat,
           endDate: data.endDate || null
         }
-      }
+      },
+      fetchPolicy: "network-only"
     });
   };
 
@@ -114,7 +120,6 @@ const FormEventComponent = ({ clickedDate, onRefetchBookings }: IFormEventCompon
 
   const handleCancelEdit = () => {
     setIsDataEdit(false);
-    clearBookingId();
   };
 
   return (

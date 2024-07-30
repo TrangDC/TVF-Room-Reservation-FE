@@ -9,4 +9,3 @@ export interface IAdminsAPI {
   workEmail: string;
   role: IRoleAPI;
 }
-

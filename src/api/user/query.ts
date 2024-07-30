@@ -1,15 +1,14 @@
 import { gql } from "@apollo/client";
 
-export const GET_ADMINS = gql`
-  query GetAdmins {
-    GetAdmins {
-      id
-      name
-      workEmail
-      roles {
-            id
-            machineName
-        }
+export const GET_ADMIN_USERS = gql`
+  query GetAdminUsers($pagination: PaginationInput!, $keyword: String) {
+    GetAdminUsers(pagination: $pagination, keyword: $keyword) {
+      total
+      data {
+        id
+        name
+        workEmail
+      }
     }
   }
 `;
@@ -17,26 +16,26 @@ export const GET_ADMINS = gql`
 export const GET_ROLES = gql`
   query GetRoles {
     GetRoles {
-        id
-        machineName
-        name
-        description
+      id
+      machineName
+      name
+      description
     }
   }
 `;
 
 export const ASSIGN_ROLE = gql`
   mutation AssignRole($input: AssignRoleInput!) {
-  AssignRole(input: $input) {
-    message
+    AssignRole(input: $input) {
+      message
+    }
   }
-}
 `;
 
 export const UNASSIGN_ROLE = gql`
   mutation UnassignRole($input: UnassignRoleInput!) {
-  UnassignRole(input: $input) {
-    message
+    UnassignRole(input: $input) {
+      message
+    }
   }
-}
 `;
