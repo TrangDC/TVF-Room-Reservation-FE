@@ -1,8 +1,10 @@
+import { requirePropFactory } from "@mui/material";
 import {
   ChangeEvent,
   InputHTMLAttributes,
   Ref,
   RefAttributes,
+  TextareaHTMLAttributes,
   forwardRef,
   useEffect,
   useState
