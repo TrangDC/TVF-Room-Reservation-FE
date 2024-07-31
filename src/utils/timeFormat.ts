@@ -10,6 +10,24 @@ export const dateToStringTime = (date: Date | null): string => {
   return formateDate
 }
 
+export const formatDate = (date: Date) => {
+  const currentDate = date.toISOString().split("T")[0];
+  return currentDate;
+};
+
+export const getDateAfterDays = (daysRange: number, date: string = "") => {
+  let newDate: Date;
+
+  if (date) {
+    newDate = new Date(date);
+  } else {
+    newDate = new Date();
+  }
+
+  newDate.setDate(newDate.getDate() + daysRange);
+  return newDate.toISOString().split('T')[0];
+};
+
 export const stringToNumber = (hours: string | null, minutes: string | null) => {
   return Number(hours) * 60 + Number(minutes)
 }

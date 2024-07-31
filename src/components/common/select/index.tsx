@@ -38,7 +38,7 @@ const Select = <T extends { id: string; name: string }>({
   return (
     <label htmlFor='form' className={containerClass + " block text-sm font-medium text-gray-900"}>
       <span className={labelClass}>
-        {label} {required && <span className='text-xl text-red-500'>*</span>}:
+        {label} {required && <span className='text-xl text-red-500'>*</span>}
       </span>
       <select
         id={name}
