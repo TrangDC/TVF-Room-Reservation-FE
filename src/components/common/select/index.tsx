@@ -24,7 +24,10 @@ const Select = <T extends { id: string; name: string }>({
   label = "select"
 }: ISelect<T>) => {
   const [selectedOption, setSelectedOption] = useState<string | undefined>("");
+
   useEffect(() => {
+    if (!defaultValue) return;
+
     setSelectedOption(defaultValue);
   }, [defaultValue]);
 
@@ -47,6 +50,9 @@ const Select = <T extends { id: string; name: string }>({
         value={selectedOption}
         onChange={handleOnchange}
       >
+        <option value='' disabled>
+          --- {label} ---
+        </option>
         {options &&
           options.map((option) => (
             <option className={optionClass} key={option.id} value={option.id}>
