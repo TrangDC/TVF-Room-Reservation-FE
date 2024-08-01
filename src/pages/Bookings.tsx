@@ -19,6 +19,7 @@ import { useDebounce } from "../hooks/useDebounce";
 import { toast } from "react-toastify";
 import { TOAST_FORM_ID } from "../constants/toastId";
 import { TextField } from "@mui/material";
+import { formatDate, getDateAfterDays } from "../utils/timeFormat";
 
 function Bookings() {
   const [getBookings, { data: bookings, refetch: bookingsRefetch, loading }] =
@@ -34,20 +35,24 @@ function Bookings() {
   const [filterForm, setFilterForm] = useState<string>("");
   const [totalMeeting, setTotalMeeting] = useState<number>(12);
   const { bookingId, setBookingId, clearBookingId } = useBookingStore();
-  const currentDate = new Date();
-  const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-  const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-  const [startDate, setStartDate] = useState<string>(startOfMonth.toISOString().split("T")[0]);
-  const [endDate, setEndDate] = useState<string>(endOfMonth.toISOString().split("T")[0]);
-  // const [currentPage, setCurrentPage] = useState<number>(1);
-
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
   const getSelectOffice =
     localStorageHelper.get<string>(
       localStorageHelper.LOCAL_STORAGE_KEYS.CALENDAR_SELECT_OFFICEID
     ) || "";
+
+  useEffect(() => {
+    const currentDate = formatDate(new Date());
+    const endDate = getDateAfterDays(30);
+    setStartDate(currentDate);
+    setEndDate(endDate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (officesData) {
-      handleSelectOfficeSorting(getSelectOffice || officesData.GetOffices[0].id);
+      setSelectedOffice(getSelectOffice || officesData.GetOffices[0].id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [officesData]);
@@ -64,26 +69,29 @@ function Bookings() {
     setSelectOptions(newOfficesData);
   }, [officesData]);
 
+  useEffect(() => {
+    if (selectedOffice) {
+      debouceFormData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterForm, selectedOffice, startDate, endDate]);
+
   const handleSelectOfficeSorting = (officeId: string) => {
     if (!officeId) return;
-    const currentDate = new Date();
-    const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
-      .toISOString()
-      .split("T")[0];
-    const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
-      .toISOString()
-      .split("T")[0];
+
+    setSelectedOffice(officeId);
     localStorageHelper.set(
       localStorageHelper.LOCAL_STORAGE_KEYS.CALENDAR_SELECT_OFFICEID,
       officeId
     );
-    setSelectedOffice(officeId);
+
     getBookings({
       variables: {
         filter: {
-          startDate,
-          endDate,
-          officeId: officeId
+          startDate: startDate,
+          endDate: endDate,
+          keyword: filterForm,
+          officeId: selectedOffice
         },
         pagination: {
           page: 1,
@@ -95,6 +103,7 @@ function Bookings() {
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+
     if (name === "startDate") {
       setStartDate(value);
     } else if (name === "endDate") {
@@ -106,6 +115,7 @@ function Bookings() {
           filter: {
             startDate: name === "startDate" ? value : startDate,
             endDate: name === "endDate" ? value : endDate,
+            keyword: filterForm,
             officeId: selectedOffice
           },
           pagination: {
@@ -149,19 +159,13 @@ function Bookings() {
   ];
 
   const handleSetPage = (page: number) => {
-    const currentDate = new Date();
-    const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
-      .toISOString()
-      .split("T")[0];
-    const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
-      .toISOString()
-      .split("T")[0];
     getBookings({
       variables: {
         filter: {
           startDate,
           endDate,
-          officeId: selectedOffice
+          officeId: selectedOffice,
+          keyword: filterForm
         },
         pagination: {
           page: page ? page : 1,
@@ -232,7 +236,9 @@ function Bookings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookings, bookingsRefetch, totalMeeting]);
 
-  const handleFilterForm = () => {
+  const debouceFormData = useDebounce(handleFilterForm, 100);
+  function handleFilterForm() {
+    if (!startDate || !endDate) return;
     getBookings({
       variables: {
         filter: {
@@ -247,14 +253,7 @@ function Bookings() {
         }
       }
     });
-  };
-  const debouceFormData = useDebounce(handleFilterForm, 300);
-
-  useEffect(() => {
-    if (selectedOffice) {
-      debouceFormData();
-    }
-  }, [filterForm, selectedOffice, startDate, endDate]);
+  }
 
   const handleModalConfirmCancel = () => {
     setIsShowModal(false);
@@ -301,7 +300,6 @@ function Bookings() {
                 containerClass='flex flex-row items-center mr-5 mb-[20px] md:mb-0'
                 labelClass='mr-5 text-lg text-black'
                 selectClass='!text-[16px] py-[9px] px-[1px] cursor-pointer w-[130px] h-[41px]'
-                // options={officesData}
                 options={selectOptions}
                 onSelectOption={handleSelectOfficeSorting}
                 label='Office'
