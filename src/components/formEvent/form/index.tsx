@@ -53,6 +53,7 @@ function FormEvent({
   const currentDay = String(currentDate.getDate()).padStart(2, "0");
   // Format the date as YYYY-MM-DD
   const formattedCurrentDate = `${currentYear}-${currentMonth}-${currentDay}`;
+
   const [formData, setFormData] = useState<IFormData>({
     isRepeat: false,
     title: "",
@@ -209,6 +210,13 @@ function FormEvent({
       return;
     }
 
+    if (formData.startTime >= formData.endTime) {
+      toast.warn("Selected end time cannot precede or equal to start time!", {
+        toastId: TOAST_FORM_ID.WARNING
+      });
+      return;
+    }
+
     if (formData.isRepeat && !formData.endDate) {
       toast.warn("Please select end date!", {
         toastId: TOAST_FORM_ID.WARNING
@@ -231,54 +239,17 @@ function FormEvent({
     const startTimeMinutesFormat = stringToNumber(startTimeHours, startTimeMinutes);
 
     const validateMeetingDuration =
-      endTimeMinutesFormat - startTimeMinutesFormat <= 60 &&
+      endTimeMinutesFormat - startTimeMinutesFormat <= 240 &&
       endTimeMinutesFormat - startTimeMinutesFormat > 0;
 
-    if (!formData.startTime) {
-      toast.warn("Please select when meeting start!", {
-        toastId: TOAST_FORM_ID.WARNING
-      });
-    } else if (formData.startTime < formData.endTime && !validateMeetingDuration) {
-      toast.warn("Meeting duration must be less than an hour!", {
-        toastId: TOAST_FORM_ID.WARNING
-      });
-    } else if (formData.startTime >= formData.endTime) {
-      toast.warn("Selected end time cannot precede or equal to start time!", {
+    if (formData.startTime < formData.endTime && !validateMeetingDuration) {
+      toast.warn("Meeting duration must be within four hours!", {
         toastId: TOAST_FORM_ID.WARNING
       });
       return;
-    }
-
-    if (formData.endTime) {
-      const [startTimeHours, startTimeMinutes] = formData.startTime.split(":");
-      const [endTimeHours, endTimeMinutes] = formData.endTime.split(":");
-      const endTimeMinutesFormat = stringToNumber(endTimeHours, endTimeMinutes);
-      const startTimeMinutesFormat = stringToNumber(startTimeHours, startTimeMinutes);
-      const validateMeetingDuration =
-        endTimeMinutesFormat - startTimeMinutesFormat <= 60 &&
-        endTimeMinutesFormat - startTimeMinutesFormat > 0;
-
-      if (!validateMeetingDuration) {
-        toast.warn("Meeting duration must be within an hour!", {
-          toastId: TOAST_FORM_ID.WARNING
-        });
-        return;
-      }
     }
 
     let endDateFormat;
-
-    const startTime = new Date(`${formData.reservationDay}T${formData.startTime}`);
-    const endTime = new Date(`${formData.reservationDay}T${formData.endTime}`);
-    const duration = (endTime.getTime() - startTime.getTime()) / (1000 * 60);
-
-    if (duration > 60) {
-      toast.warn("Maximum time for meeting is 1 hour", {
-        toastId: TOAST_FORM_ID.WARNING
-      });
-      return;
-    }
-
     const startDateFormat = `${formData.reservationDay}T${formData.startTime}:00Z`;
 
     if (formData.isRepeat) {
