@@ -9,11 +9,11 @@ import Rooms from "./pages/Rooms.tsx";
 import Users from "./pages/Users.tsx";
 import AuthAdminProtected from "./components/authAdmin/index.tsx";
 import { cookieHelper } from "./utils/cookie.ts";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import useUserStore from "./store/store.ts";
 import { useLazyQuery } from "@apollo/client";
 import { GET_ROLE_USER } from "./api/booking/query.ts";
-import { jwtDecode } from "jwt-decode";
+// import { jwtDecode } from "jwt-decode";
 
 function InnerApp() {
   return (
@@ -42,8 +42,8 @@ function InnerApp() {
 
 function App() {
   const navigate = useNavigate();
-  const [userInfo, setUserInfo] = useState({ email: "", name: "" });
-  const [GetUserByOID, { data: oidData }] = useLazyQuery(GET_ROLE_USER);
+  //   const [userInfo, setUserInfo] = useState({ email: "", name: "" });
+  const [GetMe, { data }] = useLazyQuery(GET_ROLE_USER);
   const storedToken = cookieHelper.get(cookieHelper.COOKIE_KEYS.ACCESS_TOKEN);
   const queryString = window.location.search;
   const urlParams = new URLSearchParams(queryString);
@@ -51,22 +51,22 @@ function App() {
   const refreshtoken = urlParams.get("refreshToken") || "";
   const { setUser } = useUserStore();
 
-  const handleDecodeToken = (accesstoken: string) => {
-    const token = accesstoken;
-    const { email, name, oid }: { email: string; name: string; oid: string } = jwtDecode(token);
-    setUserInfo({ email, name });
-    const returnData = { email: email, name: name, oid: oid };
-    return returnData;
-  };
+  //   const handleDecodeToken = (accesstoken: string) => {
+  //     const token = accesstoken;
+  //     const { email, name }: { email: string; name: string } = jwtDecode(token);
+  //     setUserInfo({ email, name });
+  //     const returnData = { email: email, name: name };
+  //     return returnData;
+  //   };
 
-  const handleSetRole = async (oid: string, email: string, name: string) => {
+  const handleSetRole = async () => {
+    await GetMe();
     try {
-      const { data } = await GetUserByOID({ variables: { oID: oid } });
       if (data)
         setUser({
-          username: name,
-          email: email,
-          role: data.GetUserByOID.roles[0].machineName
+          username: data.GetMe.name,
+          email: data.GetMe.workEmail,
+          role: data.GetMe.roles[0].machineName
         });
       navigate("/");
     } catch (error) {
@@ -80,33 +80,25 @@ function App() {
     }
     if (accesstoken) {
       cookieHelper.set(cookieHelper.COOKIE_KEYS.ACCESS_TOKEN, accesstoken);
-      const { email, name, oid } = handleDecodeToken(accesstoken);
-      handleSetRole(email, name, oid);
+      handleSetRole();
       navigate("/");
     }
     if (refreshtoken) {
       cookieHelper.set(cookieHelper.COOKIE_KEYS.REFRESH_TOKEN, refreshtoken);
     }
     if (storedToken) {
-      const { oid } = handleDecodeToken(storedToken);
-      if (oid) {
-        GetUserByOID({ variables: { oID: oid } });
-      } else {
-        useUserStore.persist.clearStorage();
-      }
+      handleSetRole();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accesstoken, queryString, oidData]);
+  }, [accesstoken, queryString]);
 
   useEffect(() => {
-    if (oidData)
-      setUser({
-        username: userInfo.name,
-        email: userInfo.email,
-        role: oidData.GetUserByOID.roles[0].machineName
-      });
+    (async () => {
+      await GetMe();
+      handleSetRole();
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [oidData]);
+  }, [data]);
 
   const handleRedirectRoute = () => {
     window.location.href = import.meta.env.VITE_DEV_AUTHORITY_LOGIN;
