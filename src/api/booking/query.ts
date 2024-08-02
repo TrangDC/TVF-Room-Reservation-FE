@@ -56,8 +56,10 @@ export const GET_BOOKING = gql`
 `;
 
 export const GET_ROLE_USER = gql`
-  query GetUserByOID($oID: UUID!) {
-    GetUserByOID(oID: $oID) {
+  query GetMe {
+    GetMe {
+      name
+      workEmail
       roles {
         id
         machineName
