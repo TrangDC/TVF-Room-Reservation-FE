@@ -18,7 +18,7 @@ import { GET_ROLE_USER } from "./api/booking/query.ts";
 function InnerApp() {
   return (
     <Routes>
-      {/* <Route path='*' element={<Navigate to='/' />} /> */}
+      <Route path='/*' element={<Navigate to='/' />} />
       <Route path='/' element={<Layout />} />
       <Route path='/error' element={<Error />} />
       <Route
@@ -43,7 +43,7 @@ function InnerApp() {
 function App() {
   const navigate = useNavigate();
   //   const [userInfo, setUserInfo] = useState({ email: "", name: "" });
-  const [GetMe, { data }] = useLazyQuery(GET_ROLE_USER);
+  const [GetMe, { data: getMedata }] = useLazyQuery(GET_ROLE_USER);
   const storedToken = cookieHelper.get(cookieHelper.COOKIE_KEYS.ACCESS_TOKEN);
   const queryString = window.location.search;
   const urlParams = new URLSearchParams(queryString);
@@ -59,19 +59,18 @@ function App() {
   //     return returnData;
   //   };
 
+  useEffect(() => {
+    if (!getMedata) return;
+    handleSetRole();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [getMedata]);
+
   const handleSetRole = async () => {
-    await GetMe();
-    try {
-      if (data)
-        setUser({
-          username: data.GetMe.name,
-          email: data.GetMe.workEmail,
-          role: data.GetMe.roles[0].machineName
-        });
-      navigate("/");
-    } catch (error) {
-      console.error("Error setting user role:", error);
-    }
+    setUser({
+      username: getMedata.GetMe.name,
+      email: getMedata.GetMe.workEmail,
+      role: getMedata.GetMe.roles[0].machineName
+    });
   };
 
   useEffect(() => {
@@ -80,25 +79,17 @@ function App() {
     }
     if (accesstoken) {
       cookieHelper.set(cookieHelper.COOKIE_KEYS.ACCESS_TOKEN, accesstoken);
-      handleSetRole();
+      GetMe();
       navigate("/");
     }
     if (refreshtoken) {
       cookieHelper.set(cookieHelper.COOKIE_KEYS.REFRESH_TOKEN, refreshtoken);
     }
     if (storedToken) {
-      handleSetRole();
+      GetMe();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accesstoken, queryString]);
-
-  useEffect(() => {
-    (async () => {
-      await GetMe();
-      handleSetRole();
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data]);
 
   const handleRedirectRoute = () => {
     window.location.href = import.meta.env.VITE_DEV_AUTHORITY_LOGIN;
