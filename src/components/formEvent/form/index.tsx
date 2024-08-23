@@ -347,6 +347,7 @@ function FormEvent({
               type='text'
               name='title'
               id='title'
+              autoFocus
               required={true}
               maxLength={200}
               label='Reservation Information'
