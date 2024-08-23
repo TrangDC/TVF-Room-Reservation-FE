@@ -88,7 +88,7 @@ const logoutLink = onError(({ graphQLErrors, networkError, operation }) => {
   // check case 401
   const { response } = operation.getContext();
   if (response.status === 401) {
-    localStorageHelper.clearAll();
+    localStorageHelper.clearInfo();
     useUserStore.persist.clearStorage();
     cookieHelper.remove(cookieHelper.COOKIE_KEYS.ACCESS_TOKEN);
     cookieHelper.remove(cookieHelper.COOKIE_KEYS.REFRESH_TOKEN);

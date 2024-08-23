@@ -41,7 +41,7 @@ const RoomInfo: React.FC<RoomInfoProps> = ({
     >
       <div
         key={id}
-        className={`col-span-3 md:col-span-3 2xl:col-span-1 xl:col-span-3 relative shadow-2xl ${status && selectedId === id ? "border-white border-4" : "border-transparent"} cursor-pointer`}
+        className={`col-span-3 md:col-span-3 2xl:col-span-1 xl:col-span-3 relative shadow-2xl ${status && selectedId === id ? " border-[#9bbcff] border-[6px]" : "border-transparent"} cursor-pointer`}
         onClick={() => {
           onClick && onClick(id);
         }}

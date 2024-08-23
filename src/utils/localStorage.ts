@@ -33,9 +33,10 @@ const remove = (key: string): void => {
   }
 };
 
-const clearAll = (): void => {
+const clearInfo = (): void => {
   if (window && localStorage) {
-    localStorage.clear();
+    localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+    localStorage.removeItem(LOCAL_STORAGE_KEYS.FORM_DATA);
   }
 };
 
@@ -44,5 +45,5 @@ export const localStorageHelper = {
   get,
   set,
   remove,
-  clearAll
+  clearInfo
 };
