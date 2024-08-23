@@ -284,6 +284,7 @@ function FormEvent({
         const time = `${hour}:${minute}`;
         if (startTime && time <= startTime) continue;
         if (endTime && time >= endTime) continue;
+        if (h === 17 && m === 45) break;
         times.push(time);
       }
     }

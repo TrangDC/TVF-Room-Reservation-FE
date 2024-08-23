@@ -73,7 +73,6 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
         };
         const startTime = getFormattedTime(startRecur);
         const endTime = getFormattedTime(endRecur);
-
         return {
           id: booking.id,
           title: booking.title,
@@ -232,6 +231,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
             const title = `${event.title}\n ${roomName}, ${floor}, ${startTime} - ${endTime}`;
             el.setAttribute("title", title);
           }}
+          timeZone='UTC'
           height={height}
           weekends={weekends}
           events={newBookings}
