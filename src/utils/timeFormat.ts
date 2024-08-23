@@ -2,12 +2,22 @@ export const dateToStringTime = (date: Date | null): string => {
   if (!date) return "";
 
   const formateDate = date?.toLocaleTimeString("en-US", {
+    timeZone: "Asia/Ho_Chi_Minh",
     hour: "2-digit",
     minute: "2-digit",
-    hour12: false
+    hour12: false,
   })
 
   return formateDate
+}
+
+export function testing(dateString: string) {
+  const date = new Date(dateString);
+
+  const hours = date.getUTCHours().toString().padStart(2, '0');
+  const minutes = date.getUTCMinutes().toString().padStart(2, '0');
+
+  return `${hours}:${minutes}`;
 }
 
 export const formatDate = (date: Date) => {
