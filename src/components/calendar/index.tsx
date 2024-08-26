@@ -13,7 +13,7 @@ import { TOAST_CALENDAR_ID } from "../../constants/toastId";
 import useUserStore from "../../store/store";
 import { IExtendedProps } from "../../types/interfaces/calendar";
 import { IEvent } from "../../types/interfaces/event";
-import { dateToStringTime } from "../../utils/timeFormat";
+import { dateToStringTime, testing } from "../../utils/timeFormat";
 import Button from "../common/button/button";
 import Modal from "../common/modal";
 import "./index.scss";
@@ -63,16 +63,18 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
   const handleMappingBookingsData = () => {
     if (bookings) {
       events = bookings?.map((booking: IBookingAPI) => {
-        const startRecur = new Date(`${booking.startDate}`);
-        const endRecur = new Date(`${booking.endDate}`);
+        const startRecur = new Date(booking?.startDate ?? "");
+        const endRecur = new Date(booking?.endDate ?? "");
 
         const getFormattedTime = (date: Date): string => {
           const hours = date.getUTCHours().toString().padStart(2, "0");
           const minutes = date.getUTCMinutes().toString().padStart(2, "0");
           return `${hours}:${minutes}`;
         };
+
         const startTime = getFormattedTime(startRecur);
         const endTime = getFormattedTime(endRecur);
+
         return {
           id: booking.id,
           title: booking.title,
@@ -133,8 +135,8 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
     const { title, backgroundColor, start, end, id } = eventInfo.event;
     const { name, floor, creatorEmail } = eventInfo.event.extendedProps;
 
-    const startTime = dateToStringTime(start);
-    const endTime = dateToStringTime(end);
+    const startTime = testing(new Date(start).toISOString());
+    const endTime = testing(new Date(end).toISOString());
 
     const handleOnClickEvent = (e: React.MouseEvent) => {
       const meetingElParentEl = (e.target as HTMLElement).parentElement?.parentElement;

@@ -5,7 +5,7 @@ export interface IBookingAPI {
   title: string;
   // startTime: string;
   // endTime: string;
-  startDate: Date;
+  startDate?: Date;
   endDate?: Date;
   user: IUserApi;
   isRepeat?: boolean;
