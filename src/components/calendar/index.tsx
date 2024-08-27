@@ -226,8 +226,10 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
             end: "dayGridMonth,timeGridWeek,timeGridDay"
           }}
           eventDidMount={({ event, el }) => {
-            const startTime = dateToStringTime(event.start);
-            const endTime = dateToStringTime(event.end);
+            // const startTime = dateToStringTime(event.start);
+            // const endTime = dateToStringTime(event.end);
+            const startTime = event.start && testing(new Date(event.start).toISOString());
+            const endTime = event.end && testing(new Date(event.end).toISOString())
             const roomName = event.extendedProps.name;
             const floor = event.extendedProps.floor;
             const title = `${event.title}\n ${roomName}, ${floor}, ${startTime} - ${endTime}`;
